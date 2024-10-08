@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ведення заробітної плати</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+
+<h1>Ведення заробітної плати</h1>
+
+<label for="hourlyRate">Погодинна ставка:</label>
+<input type="number" id="hourlyRate" placeholder="Ставка" />
+
+<label for="regularHours">Основні робочі години:</label>
+<input type="number" id="regularHours" value="8" />
+
+<label for="date">Дата:</label>
+<input type="date" id="date" />
+
+<label for="startTime">Година входу:</label>
+<input type="time" id="startTime" />
+
+<label for="endTime">Година виходу:</label>
+<input type="time" id="endTime" />
+
+<button onclick="addEntry()">Додати запис</button>
+
+<h2>Фінансові результати</h2>
+<p>Загальна заробітна плата: <span id="totalSalary">0.00</span> грн</p>
+
+<table id="payTable">
+    <thead>
+        <tr>
+            <th>Дата</th>
+            <th>Година входу</th>
+            <th>Година виходу</th>
+            <th>Кількість годин</th>
+            <th>Заробітна плата</th>
+            <th>Переробіток (год)</th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+
+<script>
+let totalSalary = 0;
+
+function addEntry() {
+    const hourlyRate = parseFloat(document.getElementById('hourlyRate').value);
+    const regularHoursLimit = parseFloat(document.getElementById('regularHours').value);
+    const date = document.getElementById('date').value;
+    const startTime = document.getElementById('startTime').value;
+    const endTime = document.getElementById('endTime').value;
+
+    if (!hourlyRate || !date || !startTime || !endTime) {
+        alert("Будь ласка, заповніть всі поля!");
+        return;
+    }
+
+    const start = new Date(`1970-01-01T${startTime}:00`);
+    const end = new Date(`1970-01-01T${endTime}:00`);
+    const hoursWorked = (end - start) / 3600000; // Конвертуємо в години
+
+    // Розрахунок основних годин і переробітку
+    const regularHours = Math.min(hoursWorked, regularHoursLimit);
+    const overtimeHours = Math.max(0, hoursWorked - regularHoursLimit);
+    
+    // Додаємо наднормовані години для вихідних
+    const dateObj = new Date(date);
+    const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6; // 0 - неділя, 6 - субота
+    const weekendOvertime = isWeekend ? hoursWorked * 0.5 : 0; // 1.5 ставки для вихідних
+
+    const salary = (regularHours * hourlyRate) + (overtimeHours * hourlyRate * 1.5) + (weekendOvertime * hourlyRate * 1.5);
+    totalSalary += salary; // Додаємо до загальної заробітної плати
+
+    const tableRow = `
+        <tr>
+            <td>${date}</td>
+            <td>${startTime}</td>
+            <td>${endTime}</td>
+            <td>${hoursWorked.toFixed(2)}</td>
+            <td>${salary.toFixed(2)}</td>
+            <td>${(overtimeHours + weekendOvertime).toFixed(2)}</td>
+        </tr>
+    `;
+
+    document.querySelector('#payTable tbody').insertAdjacentHTML('beforeend', tableRow);
+    document.getElementById('totalSalary').innerText = totalSalary.toFixed(2); // Оновлюємо загальну заробітну плату
+
+    // Очистити поля після додавання запису
+    document.getElementById('hourlyRate').value = '';
+    document.getElementById('date').value = '';
+    document.getElementById('startTime').value = '';
+    document.getElementById('endTime').value = '';
+}
+</script>
+
+</body>
+</html>
